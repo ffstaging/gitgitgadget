@@ -108,6 +108,7 @@ jobs:
     - name: Run linter
       run: npm run lint
       working-directory: gitgitgadget
+      if: "false"
 
     - name: Run build
       run: npm run build
@@ -118,6 +119,7 @@ jobs:
         GIT_CONFIG_PARAMETERS: ${{ env.GGG_SMTP }}${{ env.GGG_REPO }}
       run: npm run test
       working-directory: gitgitgadget
+      if: "false"
 
     - name: Clean up two day old branches and PRs
       uses: actions/github-script@v3

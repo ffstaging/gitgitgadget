@@ -3,7 +3,7 @@
   "include": [
     "lib/**/*.ts",
     "script/**/*.ts",
-    "tests/**/*.ts",
+    //"tests/**/*.ts",
     "./.eslintrc.js",
   ]
 }
