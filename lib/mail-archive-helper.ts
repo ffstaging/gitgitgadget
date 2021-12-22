@@ -195,10 +195,9 @@ export class MailArchiveGitHelper {
                     }
                 }
                 if (!pullRequestURL) {
-                    process.stdout.write(`mboxHandler no pullRequestURL found for message: ${keys.size}\n`);
+                    process.stdout.write(`mboxHandler no pullRequestURL found for message: ${parsed.messageID}\n`);
                     return;
                 }
-                process.stdout.write(`mboxHandler WARNING - you got a frame}\n`);
 
                 console.log(`Message-ID ${parsed.messageID
                             } (length ${mbox.length
@@ -216,10 +215,12 @@ export class MailArchiveGitHelper {
                     MailArchiveGitHelper.mbox2markdown(parsedMbox);
 
                 if (issueCommentId) {
+                    console.log(`addPRCommentReply`);
                     await this.githubGlue.addPRCommentReply(pullRequestURL,
                                                             issueCommentId,
                                                             comment);
                 } else if (originalCommit) {
+                    console.log(`addPRCommitComment`);
                     const result = await this.githubGlue
                         .addPRCommitComment(pullRequestURL, originalCommit,
                                             this.gggNotes.workDir, comment);
@@ -229,13 +230,17 @@ export class MailArchiveGitHelper {
                      * We will not use the ID of this comment, as it is an
                      * issue comment, really, not a Pull Request comment.
                      */
+                    console.log(`addPRComment`);
                     await this.githubGlue
                         .addPRComment(pullRequestURL, comment);
                 }
 
+                console.log(`addPRCc`);
+
                 await this.githubGlue.addPRCc(pullRequestURL,
                                               parsedMbox.from || "");
 
+                console.log(`gggNotes.set`);
                 await this.gggNotes.set(parsed.messageID, {
                     issueCommentId,
                     messageID: parsed.messageID,
@@ -253,27 +258,32 @@ export class MailArchiveGitHelper {
 
             ////process.stdout.write(`processMails lineHandler: ${line}\n`);
 
-            if (line.startsWith("@@ ")) {
-                const match = line.match(/^@@ -(\d+,)?\d+ \+(\d+,)?(\d+)?/);
-                if (match) {
-                    if (counter) {
-                        console.log(`Oops: unprocessed buffer ${buffer}`);
+            try {
+                if (line.startsWith("@@ ")) {
+                    const match = line.match(/^@@ -(\d+,)?\d+ \+(\d+,)?(\d+)?/);
+                    if (match) {
+                        if (counter) {
+                            console.log(`Oops: unprocessed buffer ${buffer}`);
+                        }
+                        counter = parseInt(match[3], 10);
+                        buffer = "";
                     }
-                    counter = parseInt(match[3], 10);
-                    buffer = "";
-                }
-            } else if (counter && line.match(/^[ +]/)) {
-                buffer += line.substr(1) + "\n";
-                if (--counter) {
-                    return;
-                }
-                process.stdout.write(`processMails mboxHandler\n`);
+                } else if (counter && line.match(/^[ +]/)) {
+                    buffer += line.substr(1) + "\n";
+                    if (--counter) {
+                        return;
+                    }
+                    process.stdout.write(`processMails mboxHandler\n`);
 
-                try {
-                    await mboxHandler(buffer);
-                } catch (reason) {
-                    console.log(`${reason}: skipping`);
+                    try {
+                        await mboxHandler(buffer);
+                    } catch (reason) {
+                        console.log(`${reason}: skipping`);
+                    }
                 }
+            } catch (err) {
+                console.log(`lineHandler error: ${err}`);
+                //throw err;
             }
         };
 

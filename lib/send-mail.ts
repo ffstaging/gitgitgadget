@@ -74,9 +74,13 @@ export function parseMBox(mbox: string, gentle?: boolean): IParsedMBox {
         //    i++;
         //    line += lines[i];
         //}
+        if (colon < 0 && line.lastIndexOf(":") === line.length - 1) {
+            // Keys without value are valid
+            continue;
+        }
         if (colon < 0) {
             ////process.stdout.write(`parseMBox - no colon in line, just ignore that for now: ${mbox}\n`);
-            process.stdout.write(`parseMBox - no colon in line, just ignore that for now\n`);
+            process.stdout.write(`parseMBox - no colon in line ${i} from ${lines.length}:\n${line}\n`);
 
             continue;
             //throw new Error(`Failed to parse header line '${line}`);
