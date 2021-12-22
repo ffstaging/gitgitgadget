@@ -89,6 +89,8 @@ export class MailArchiveGitHelper {
                 });
 
         process.stdout.write(`processMails keys_foud: ${keys.size}\n`);
+        process.stdout.write(`processMails workDir: ${this.gggNotes.workDir}\n`);
+        process.stdout.write(`processMails gggNotes: ^\n${this.gggNotes}\n`);
 
         const seen = (messageID: string): boolean => {
             return keys.has(MailArchiveGitHelper.hashKey(messageID));
@@ -350,12 +352,18 @@ export class MailArchiveGitHelper {
 
         const range = `${this.state.latestRevision}..${head}`;
         console.log(`Handling commit range ${range}`);
-        await git(["log", "-p", "-U99999", "--reverse", range],
-                  { lineHandler, workDir: this.mailArchiveGitDir });
+
+        try {
+            await git(["log", "-p", "-U99999", "--reverse", range],
+                      { lineHandler, workDir: this.mailArchiveGitDir });
+            
+            this.state.latestRevision = head;
+            await this.gggNotes.set(stateKey, this.state, true);
+        } catch (e) {
+            console.log(`Handling error:${e}`);
+        } 
 
         console.log(`Handling done`);
-        this.state.latestRevision = head;
-        await this.gggNotes.set(stateKey, this.state, true);
 
         return true;
     }

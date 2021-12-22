@@ -40,9 +40,13 @@ if (commander.args.length === 0) {
 const commandOptions = commander.opts<commanderOptions>();
 
 async function getGitGitWorkDir(): Promise<string> {
+
+    console.log(`getGitGitWorkDir start`);
+
     if (!commandOptions.gitWorkDir) {
         commandOptions.gitWorkDir = await gitConfig("gitgitgadget.workDir",
             commandOptions.gitgitgadgetWorkDir);
+        console.log(`getGitGitWorkDir git into ${commandOptions.gitWorkDir}`);
         if (!commandOptions.gitWorkDir) {
             throw new Error("Could not determine gitgitgadget.workDir");
         }

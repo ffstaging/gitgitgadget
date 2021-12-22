@@ -54,7 +54,12 @@ export class CIHelper {
                        gggConfigDir = ".") {
         this.gggConfigDir = gggConfigDir;
         this.workDir = workDir;
+        console.log(`CIHelper: gggConfigDir: ${gggConfigDir}`);
+        console.log(`CIHelper: workDir: ${workDir}`);
         this.notes = new GitNotes(workDir);
+
+        console.log(`CIHelper: this.notes.workDir: ${this.notes.workDir}`);
+
         this.gggNotesUpdated = !!skipUpdate;
         this.mail2commit = new MailCommitMapping(this.notes.workDir);
         this.mail2CommitMapUpdated = !!skipUpdate;
