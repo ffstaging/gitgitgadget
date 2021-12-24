@@ -1,5 +1,5 @@
 import {
-    commitExists, git, gitConfig, gitConfigForEach, revParse,
+    commitExists, git, gitConfig, gitConfigForEach, //// revParse,
 } from "./git";
 
 // For now, only the Git, Cygwin and BusyBox projects are supported
@@ -39,46 +39,51 @@ export class ProjectOptions {
         let to: string;
         let midUrlPrefix = " Message-ID: ";
 
-        if (await commitExists("cb07fc2a29c86d1bc11", workDir) &&
-            await revParse(`${baseCommit}:git-gui.sh`, workDir) !== undefined) {
-            // Git GUI
-            to = "--to=git@vger.kernel.org";
-            cc.push("Pratyush Yadav <me@yadavpratyush.com>");
-            upstreamBranch = "git-gui/master";
-        } else if (await commitExists("e83c5163316f89bfbde", workDir)) {
-            // Git
-            to = "--to=git@vger.kernel.org";
-            // Do *not* Cc: Junio Hamano by default
-            upstreamBranch = "upstream/seen";
-            if (await git(["rev-list", branchName + ".." + upstreamBranch],
-                          { workDir })) {
-                upstreamBranch = "upstream/next";
-            }
-            if (await git(["rev-list", branchName + ".." + upstreamBranch],
-                          { workDir })) {
-                upstreamBranch = "upstream/master";
-            }
-            midUrlPrefix = "https://lore.kernel.org/git/";
-        } else if (await commitExists("a3acbf46947e52ff596", workDir)) {
-            // Cygwin
-            to = "--to=cygwin-patches@cygwin.com";
-            upstreamBranch = "cygwin/master";
-            midUrlPrefix = "https://www.mail-archive.com/search?"
-                + "l=cygwin-patches@cygwin.com&q=";
-        } else if (await commitExists("cc8ed39b240180b5881", workDir)) {
-            // BusyBox
-            to = "--to=busybox@busybox.net";
-            upstreamBranch = "busybox/master";
-            midUrlPrefix = "https://www.mail-archive.com/search?"
-                + "l=busybox@busybox.net&q=";
-        } else if (await commitExists("7ccd18012de2e6c47e5", workDir)) {
-            // We're running in the test suite!
-            to = "--to=reviewer@example.com";
-            upstreamBranch = "master";
-            midUrlPrefix = "https://dummy.com/?mid=";
-        } else {
-            throw new Error("Unrecognized project");
-        }
+        to = "--to=ffmpegdev@gitmailbox.com";
+        upstreamBranch = "FFmpeg/master";
+
+        midUrlPrefix = "https://master.gitmailbox.com/ffmpegdev/";
+
+        ////if (await commitExists("cb07fc2a29c86d1bc11", workDir) &&
+        ////    await revParse(`${baseCommit}:git-gui.sh`, workDir) !== undefined) {
+        ////    // Git GUI
+        ////    to = "--to=git@vger.kernel.org";
+        ////    cc.push("Pratyush Yadav <me@yadavpratyush.com>");
+        ////    upstreamBranch = "git-gui/master";
+        ////} else if (await commitExists("e83c5163316f89bfbde", workDir)) {
+        ////    // Git
+        ////    to = "--to=git@vger.kernel.org";
+        ////    // Do *not* Cc: Junio Hamano by default
+        ////    upstreamBranch = "upstream/seen";
+        ////    if (await git(["rev-list", branchName + ".." + upstreamBranch],
+        ////                  { workDir })) {
+        ////        upstreamBranch = "upstream/next";
+        ////    }
+        ////    if (await git(["rev-list", branchName + ".." + upstreamBranch],
+        ////                  { workDir })) {
+        ////        upstreamBranch = "upstream/master";
+        ////    }
+        ////    midUrlPrefix = "https://master.gitmailbox.com/ffmpegdev/";
+        ////} else if (await commitExists("a3acbf46947e52ff596", workDir)) {
+        ////    // Cygwin
+        ////    to = "--to=cygwin-patches@cygwin.com";
+        ////    upstreamBranch = "cygwin/master";
+        ////    midUrlPrefix = "https://www.mail-archive.com/search?"
+        ////        + "l=cygwin-patches@cygwin.com&q=";
+        ////} else if (await commitExists("cc8ed39b240180b5881", workDir)) {
+        ////    // BusyBox
+        ////    to = "--to=busybox@busybox.net";
+        ////    upstreamBranch = "busybox/master";
+        ////    midUrlPrefix = "https://www.mail-archive.com/search?"
+        ////        + "l=busybox@busybox.net&q=";
+        ////} else if (await commitExists("7ccd18012de2e6c47e5", workDir)) {
+        ////    // We're running in the test suite!
+        ////    to = "--to=reviewer@example.com";
+        ////    upstreamBranch = "master";
+        ////    midUrlPrefix = "https://dummy.com/?mid=";
+        ////} else {
+        ////    throw new Error("Unrecognized project");
+        ////}
 
         if (basedOn) {
             upstreamBranch = basedOn;

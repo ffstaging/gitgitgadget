@@ -55,7 +55,7 @@ export class GitHubGlue {
     protected authenticated?: string;
     protected repo: string;
 
-    public constructor(workDir?: string, repo = "git") {
+    public constructor(workDir?: string, repo = "FFmpeg") {
         this.repo = repo;
         this.workDir = workDir;
     }
@@ -70,7 +70,7 @@ export class GitHubGlue {
             throw new Error(`Could not find ${gitGitCommit}: '${output}'`);
         }
         const [, short, completedAt] = match;
-        const url = `https://github.com/git/git/commit/${gitGitCommit}`;
+        const url = `https://github.com/FFmpeg/FFmpeg/commit/${gitGitCommit}`;
 
         await this.ensureAuthenticated(repositoryOwner);
         const checks = await this.client.rest.checks.create({
@@ -80,7 +80,7 @@ export class GitHubGlue {
             head_sha: originalCommit,
             name: "upstream commit",
             output: {
-                summary: `Integrated into git.git as [${
+                summary: `Integrated into ffmpeg as [${
                     short}](${url}).`,
                 title: `In git.git: ${short}`,
             },
@@ -102,6 +102,10 @@ export class GitHubGlue {
     public async addPRCc(pullRequestURL: string, cc: string):
         Promise<void> {
         const id = cc.match(/<(.*)>/);
+
+        ////if (!id || id[1] === "gitster@pobox.com") {
+        ////    return;
+        ////}
 
         if (!id || id[1] === "gitster@pobox.com") {
             return;
@@ -355,6 +359,9 @@ export class GitHubGlue {
      */
     public async getPRInfo(repositoryOwner: string, prNumber: number):
         Promise<IPullRequestInfo> {
+
+        process.stdout.write(`getPRInfo prNumber ${prNumber}  repositoryOwner ${repositoryOwner}  this.repo ${this.repo}  \n`);
+
         const response = await this.client.rest.pulls.get({
             owner: repositoryOwner,
             pull_number: prNumber,
@@ -483,11 +490,16 @@ export class GitHubGlue {
     }
 
     protected async ensureAuthenticated(repositoryOwner: string):
-        Promise<void> {
+Promise < void >
+{
+
+        // TODO
+        var repositoryOwner =  "ffstaging";
+
         if (repositoryOwner !== this.authenticated) {
-            const infix = repositoryOwner === "gitgitgadget" ?
+            const infix = repositoryOwner === "ffstaging" ?
                 "" : `.${repositoryOwner}`;
-            const token = await gitConfig(`gitgitgadget${infix}.githubToken`);
+            const token = await gitConfig(`ffgithub${infix}.githubToken`);
             if (!token) {
                 throw new Error(`Need a GitHub token for ${repositoryOwner}`);
             }

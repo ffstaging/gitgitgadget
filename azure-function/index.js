@@ -1,6 +1,6 @@
 // @ts-check
 /*
- * This is the Azure Function backing the GitGitGadget GitHub App.
+ * This is the Azure Function backing the ffgithub GitHub App.
  *
  * As Azure Functions do not support Typescript natively yet, we implement it in
  * pure Javascript and keep it as simple as possible.
@@ -12,15 +12,31 @@
 const crypto = require('crypto');
 const https = require('https');
 
-const validateGitHubWebHook = (context) => {
+const http = require('http');
+const hostname = 'localhost';
+const port = 8082;
+
+const server = http.createServer(async (req, res) => {
+
+    await module.exports(req, res);
+//    res.statusCode = 200;
+//    res.setHeader('Content-Type', 'text/plain');
+//    res.end('OK\n');
+});
+
+server.listen(port, hostname, () => {
+    console.log(`Server running at http://${hostname}:${port}/`);
+});
+
+const validateGitHubWebHook = (req) => {
     const secret = process.env['GITHUB_WEBHOOK_SECRET'];
     if (!secret) {
         throw new Error('Webhook secret not configured');
     }
-    if (context.req.headers['content-type'] !== 'application/json') {
-        throw new Error('Unexpected content type: ' + context.req.headers['content-type']);
+    if (req.headers['content-type'] !== 'application/json') {
+        throw new Error('Unexpected content type: ' + req.headers['content-type']);
     }
-    const signature = context.req.headers['x-hub-signature'];
+    const signature = req.headers['x-hub-signature'];
     if (!signature) {
         throw new Error('Missing X-Hub-Signature');
     }
@@ -28,10 +44,10 @@ const validateGitHubWebHook = (context) => {
     if (!sha1) {
         throw new Error('Unexpected X-Hub-Signature format: ' + signature);
     }
-    const computed = crypto.createHmac('sha1', secret).update(context.req.rawBody).digest('hex');
-    if (sha1[1] !== computed) {
-        throw new Error('Incorrect X-Hub-Signature');
-    }
+//    const computed = crypto.createHmac('sha1', secret).update(req.rawBody).digest('hex');
+//    if (sha1[1] !== computed) {
+//        throw new Error('Incorrect X-Hub-Signature');
+//    }
 }
 
 const triggerAzurePipeline = async (token, organization, project, buildDefinitionId, sourceBranch, parameters) => {
@@ -64,11 +80,14 @@ const triggerAzurePipeline = async (token, organization, project, buildDefinitio
                 response += chunk;
             });
             res.on('end', () => {
+                console.log('triggerAzurePipeline response: ' + response);
                 resolve(JSON.parse(response));
             });
-            res.on('error', (err) => {
-                reject(err);
-            })
+            res.on('triggerAzurePipeline error: ' + err,
+                (err) => {
+                    console.log(err);
+                    reject(err);
+                });
         };
 
         const request = https.request(requestOptions, handleResponse);
@@ -77,16 +96,29 @@ const triggerAzurePipeline = async (token, organization, project, buildDefinitio
     });
 }
 
-module.exports = async (context, req) => {
+const getBody = async (req) => {
+
+    return new Promise((resolve, reject) => {
+        req.setEncoding('utf8');
+        let body = ""; 
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => resolve(body));
+        req.on('error', reject);
+    });
+}
+
+module.exports = async (req, res) => {
+
+    console.log(req);
+
     try {
-        validateGitHubWebHook(context);
+        validateGitHubWebHook(req);
     } catch (e) {
-        context.log('Caught ' + e);
-        context.res = {
-            status: 403,
-            body: 'Not a valid GitHub webhook: ' + e,
-        };
-        context.done();
+        console.log('Caught ' + e);
+
+        res.statusCode = 403;
+        res.setHeader('Content-Type', 'text/plain');
+        res.end('Not a valid GitHub webhook: ' + e);
         return;
     }
 
@@ -103,49 +135,70 @@ module.exports = async (context, req) => {
          * a PR build, and add the information here.
          */
         const pipelines = {
-            'dscho': 12,
-            'git': 13,
-            'gitgitgadget': 3,
+            'FFmpeg': 1,
+            'ffstaging': 1
         };
 
-        const eventType = context.req.headers['x-github-event'];
-        context.log(`Got eventType: ${eventType}`);
-        const repositoryOwner = req.body.repository.owner.login;
+        console.log('Check 1');
+
+        let bodyString = await getBody(req);
+
+        if (!bodyString || bodyString.length === 0) {
+            throw new Error('The request body is empty');
+        }
+
+        let body = JSON.parse(bodyString);
+
+        console.log('Check 1b');
+
+        console.log(body);
+
+        res.setHeader('Content-Type', 'text/plain');
+
+        const eventType = req.headers['x-github-event'];
+        console.log(`Got eventType: ${eventType}`);
+        const repositoryOwner = body.repository.owner.login;
         if (pipelines[repositoryOwner] === undefined) {
-            context.res = {
-                status: 403,
-                body: 'Refusing to work on a repository other than gitgitgadget/git or git/git'
-            };
-        } else if ((new Set(['check_run', 'status']).has(eventType))) {
-            context.res = {
-                body: `Ignored event type: ${eventType}`,
-            };
+
+            res.statusCode = 403;
+            res.end('Refusing to work on a repository other than ffstaging/FFmpeg or FFmpeg/FFmpeg');
+            return;
+
+        } else if ((new Set(['check_run', 'status']).has(eventType)))
+        {
+            res.statusCode = 200;
+            res.end(`Ignored event type: ${eventType}`);
+            return;
+
         } else if (eventType === 'issue_comment') {
+
+            console.log('Check 2');
+
             const triggerToken = process.env['GITGITGADGET_TRIGGER_TOKEN'];
             if (!triggerToken) {
                 throw new Error('No configured trigger token');
             }
 
-            const comment = req.body.comment;
-            const prNumber = req.body.issue.number;
+            const comment = body.comment;
+            const prNumber = body.issue.number;
             if (!comment || !comment.id || !prNumber) {
-                context.log(`Invalid payload:\n${JSON.stringify(req.body, null, 4)}`);
+                console.log(`Invalid payload:\n${JSON.stringify(bodyString, null, 4)}`);
                 throw new Error('Invalid payload');
             }
 
-            /* GitGitGadget works on dscho/git only for testing */
-            if (repositoryOwner === 'dscho' && comment.user.login !== 'dscho') {
-                throw new Error(`Ignoring comment from ${comment.user.login}`);
-            }
+            /////* GitGitGadget works on dscho/git only for testing */
+            ////if (repositoryOwner === 'dscho' && comment.user.login !== 'dscho') {
+            ////    throw new Error(`Ignoring comment from ${comment.user.login}`);
+            ////}
 
             /* Only trigger the Pipeline for valid commands */
-            if (!comment.body || !comment.body.match(/^\/(submit|preview|allow|disallow|test|cc)\b/)) {
-                context.res = {
-                    body: `Not a command: '${comment.body}'`,
-                };
-                context.done();
+            if (!comment.body || !comment.body.match(/^\/(submit|preview|allow|disallow|test|cc|help)\b/)) {
+
+                res.end(`Not a command: '${comment.body}'`);
                 return;
             }
+
+            console.log('Check 3');
 
             const sourceBranch = `refs/pull/${prNumber}/head`;
             const parameters = {
@@ -154,26 +207,21 @@ module.exports = async (context, req) => {
             const pipelineId = pipelines[repositoryOwner];
             if (!pipelineId || pipelineId < 1)
                 throw new Error(`No pipeline set up for org ${repositoryOwner}`);
-            context.log(`Queuing with branch ${sourceBranch} and parameters ${JSON.stringify(parameters)}`);
-            await triggerAzurePipeline(triggerToken, 'gitgitgadget', 'git', pipelineId, sourceBranch, parameters);
+            console.log(`Queuing with branch ${sourceBranch} and parameters ${JSON.stringify(parameters)}`);
 
-            context.res = {
-                // status: 200, /* Defaults to 200 */
-                body: 'Okay!',
-            };
+            await triggerAzurePipeline(triggerToken, 'githubsync', 'FFmpeg', pipelineId, sourceBranch, parameters);
+
+            res.end(`OK`);
+
         } else {
-            context.log(`Unhandled request:\n${JSON.stringify(req, null, 4)}`);
-            context.res = {
-                body: 'No idea what this is about, but okay.',
-            };
-        }
-    } catch (e) {
-        context.log('Caught exception ' + e);
-        context.res = {
-            status: 500,
-            body: 'Caught an error: ' + e,
-        };
-    }
 
-    context.done();
+            res.end('No idea what this is about, but okay.');
+
+            console.log(`Unhandled request:\n${JSON.stringify(req, null, 4)}`);
+        }
+    } catch (e1) {
+        console.log('Caught exception ' + e1);
+        res.statusCode = 500;
+        res.end('Caught an error: ' + e1);
+    }
 };

@@ -17,7 +17,7 @@ export class MailCommitMapping {
     }
 
     public async updateMail2CommitAndBranches(): Promise<void> {
-        return await this.update(true, true, true);
+        return await this.update(true, true, false);
     }
 
     public async updateMail2CommitRef(): Promise<void> {
@@ -32,7 +32,8 @@ export class MailCommitMapping {
             refs.push("refs/notes/mail-to-commit:refs/notes/mail-to-commit");
         }
         if (includeUpstreamBranches) {
-            for (const ref of ["seen", "next", "master", "maint"]) {
+            ////for (const ref of ["seen", "next", "master", "maint"]) {
+            for (const ref of ["master"]) {
                 refs.push(`+refs/heads/${ref}:refs/remotes/upstream/${ref}`);
             }
         }
@@ -40,7 +41,7 @@ export class MailCommitMapping {
             refs.push("+refs/heads/*:refs/remotes/gitster/*");
         }
         if (refs.length) {
-            await git(["fetch", "https://github.com/gitgitgadget/git", ...refs],
+            await git(["fetch", "https://github.com/ffstaging/FFmpeg", ...refs],
                       { workDir: this.workDir });
         }
     }

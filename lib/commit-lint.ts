@@ -32,13 +32,11 @@ export class LintCommit {
 
         // Basic test before all others
 
-        if (this.commitViable()) {
-            this.commitMessageLength();
-            this.bangPrefix();
-            this.lowerCaseAfterPrefix();
-            this.signedOffBy();
-            this.moreThanAHyperlink();
-        }
+        this.commitMessageLength();
+        this.bangPrefix();
+        this.lowerCaseAfterPrefix();
+        this.signedOffBy();
+        this.moreThanAHyperlink();
 
         if (this.messages.length) {
             return { checkFailed: this.blocked,
@@ -56,18 +54,6 @@ export class LintCommit {
     private block(message: string): void {
         this.blocked = true;
         this.addMessage(message);
-    }
-
-    // Test for a minimum viable commit message.
-    // - the body of the commit message should not be empty
-
-    private commitViable(): boolean {
-        if (this.lines.length < 3) {
-            this.block("Commit checks stopped - the message is too short");
-            return false;
-        }
-
-        return true;
     }
 
     // More tests of the commit message structure.

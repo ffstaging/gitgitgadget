@@ -13,13 +13,13 @@ const commander = new Command();
 commander.version("1.0.0")
     .usage("[options] ( update-open-prs | lookup-upstream-commit | "
         + "annotate-commit <pr-number> <original> <git.git> )")
-    .description("Command-line helper for GitGitGadget")
+    .description("Command-line helper for ffgithub")
     .option("-g, --git-work-dir [directory]",
             "Use a different git.git working directory than specified via "
             + "`gitgitgadget.workDir`",
             undefined)
     .option("-G, --gitgitgadget-work-dir [directory]",
-            "Use a different gitgitgadget working directory than the "
+            "Use a different ffgithub working directory than the "
             + "current working directory to access the Git config e.g. for "
             + "`gitgitgadget.workDir`",
             ".")
@@ -51,7 +51,7 @@ async function getGitGitWorkDir(): Promise<string> {
         console.log(`Cloning git into ${commandOptions.gitWorkDir}`);
         await git([
             "clone",
-            "https://github.com/gitgitgadget/git",
+            "https://github.com/ffstaging/FFmpeg",
             commandOptions.gitWorkDir,
         ]);
     }
@@ -87,7 +87,7 @@ async function getCIHelper(): Promise<CIHelper> {
 
         const handledPRs = new Set<string>();
         const handledMessageIDs = new Set<string>();
-        for (const repositoryOwner of ["gitgitgadget", "git", "dscho"]) {
+        for (const repositoryOwner of ["ffstaging", "FFmpeg"]) {
             const pullRequests = await gitHub.getOpenPRs(repositoryOwner);
             for (const pr of pullRequests) {
                 const meta = await ci.getPRMetadata(pr.pullRequestURL);
@@ -246,7 +246,7 @@ async function getCIHelper(): Promise<CIHelper> {
 
         const glue = new GitHubGlue(ci.workDir);
         const id = await glue.annotateCommit(originalCommit, gitGitCommit,
-                                             "gitgitgadget");
+                                             "ffgithub");
         console.log(`Created check with id ${id}`);
     } else if (command === "identify-merge-commit") {
         if (commander.args.length !== 3) {
@@ -281,11 +281,11 @@ async function getCIHelper(): Promise<CIHelper> {
             process.exit(1);
         }
         const repositoryOwner = commander.args.length === 3 ?
-            commander.args[1] : "gitgitgadget";
+            commander.args[1] : "ffstaging";
         const prNumber = commander.args[commander.args.length === 3 ? 2 : 1];
 
         const pullRequestURL = prNumber.match(/^http/) ? prNumber :
-            `https://github.com/${repositoryOwner}/git/pull/${prNumber}`;
+            `https://github.com/${repositoryOwner}/FFmpeg/pull/${prNumber}`;
         console.log(toPrettyJSON(await ci.getPRMetadata(pullRequestURL)));
     } else if (command === "get-pr-commits") {
         if (commander.args.length !== 2 && commander.args.length !== 3) {
@@ -294,11 +294,11 @@ async function getCIHelper(): Promise<CIHelper> {
             process.exit(1);
         }
         const repositoryOwner = commander.args.length === 3 ?
-            commander.args[1] : "gitgitgadget";
+            commander.args[1] : "ffstaging";
         const prNumber = commander.args[commander.args.length === 3 ? 2 : 1];
 
         const pullRequestURL =
-            `https://github.com/${repositoryOwner}/git/pull/${prNumber}`;
+            `https://github.com/${repositoryOwner}/FFmpeg/pull/${prNumber}`;
         const prMeta = await ci.getPRMetadata(pullRequestURL);
         if (!prMeta) {
             throw new Error(`No metadata found for ${pullRequestURL}`);
@@ -311,11 +311,11 @@ async function getCIHelper(): Promise<CIHelper> {
             process.exit(1);
         }
         const repositoryOwner = commander.args.length === 3 ?
-            commander.args[1] : "gitgitgadget";
+            commander.args[1] : "ffstaging";
         const prNumber = commander.args[commander.args.length === 3 ? 2 : 1];
 
         const pullRequestURL =
-            `https://github.com/${repositoryOwner}/git/pull/${prNumber}`;
+            `https://github.com/${repositoryOwner}/FFmpeg/pull/${prNumber}`;
 
         const meta = await ci.getPRMetadata(pullRequestURL);
         if (!meta) {
@@ -371,7 +371,7 @@ async function getCIHelper(): Promise<CIHelper> {
             process.exit(1);
         }
         const pullRequestURL = commander.args[1].match(/^[0-9]+$/) ?
-            `https://github.com/gitgitgadget/git/pull/${commander.args[1]}` :
+            `https://github.com/ffstaging/FFmpeg/pull/${commander.args[1]}` :
             commander.args[1];
         const comment = commander.args[2];
 
@@ -383,8 +383,7 @@ async function getCIHelper(): Promise<CIHelper> {
              installationID?: number;
              name: string;
         }): Promise<void> => {
-            const appName = options.name === "gitgitgadget" ?
-                "gitgitgadget" : "gitgitgadget-git";
+            const appName = "ffgithub"; // options.name === "ffgithub" ? "ffgithub" : "ffgithub-git";
             const key = await gitConfig(`${appName}.privateKey`);
             if (!key) {
                 throw new Error(`Need the ${appName} App's private key`);
@@ -396,29 +395,29 @@ async function getCIHelper(): Promise<CIHelper> {
                     appId: options.appID,
                     privateKey: key.replace(/\\n/g, `\n`)
                 }
-            })
+            });
 
             if (options.installationID === undefined) {
                 options.installationID =
                     (await client.rest.apps.getRepoInstallation({
                         owner: options.name,
-                        repo: "git",
+                        repo: "FFmpeg",
                 })).data.id;
             }
             const result = await client.rest.apps.createInstallationAccessToken(
                 {
                     installation_id: options.installationID,
                 });
-            const configKey = options.name === "gitgitgadget" ?
-                "gitgitgadget.githubToken" :
-                `gitgitgadget.${options.name}.githubToken`;
+            const configKey = options.name === "ffgithub" ?
+                "ffgithub.githubToken" :
+                `ffgithub.${options.name}.githubToken`;
             await git(["config", configKey, result.data.token]);
         };
 
-        await set({appID: 12836, installationID: 195971, name: "gitgitgadget"});
-        for (const org of commander.args.slice(1)) {
-            await set({ appID: 46807, name: org});
-        }
+        await set({appID: 158557, installationID: 21289240, name: "ffgithub"});
+    ////    for (const org of commander.args.slice(1)) {
+    ////        await set({ appID: 46807, name: org});
+    ////    }
     } else if (command === "handle-pr-comment") {
         if (commander.args.length !== 2 && commander.args.length !== 3) {
             process.stderr.write(`${command}: optionally takes  a ${
@@ -426,7 +425,7 @@ async function getCIHelper(): Promise<CIHelper> {
             process.exit(1);
         }
         const repositoryOwner = commander.args.length === 3 ?
-            commander.args[1] : "gitgitgadget";
+            commander.args[1] : "ffstaging";
         const commentID =
             parseInt(commander.args[commander.args.length === 3 ? 2 : 1], 10);
 
@@ -437,17 +436,20 @@ async function getCIHelper(): Promise<CIHelper> {
                                  ""}owner and a Pull Request number\n`);
             process.exit(1);
         }
+
+        process.stdout.write(`commander.args.length: ${commander.args.length} 0: ${commander.args[0]} 1: ${commander.args[1]} \n`);
+
         const repositoryOwner = commander.args.length === 3 ?
-            commander.args[1] : "gitgitgadget";
+            commander.args[1] : "ffstaging";
         const prNumber =
             parseInt(commander.args[commander.args.length === 3 ? 2 : 1], 10);
 
         await ci.handlePush(repositoryOwner, prNumber);
     } else if (command === "handle-new-mails") {
         const mailArchiveGitDir =
-            await gitConfig("gitgitgadget.loreGitDir");
+            await gitConfig("gitgitgadget.mailboxDir");
         if (!mailArchiveGitDir) {
-            process.stderr.write("Need a lore.kernel/git worktree");
+            process.stderr.write("Need a gitmailbox/ffmpegdev worktree");
             process.exit(1);
         }
         const onlyPRs = new Set<number>();

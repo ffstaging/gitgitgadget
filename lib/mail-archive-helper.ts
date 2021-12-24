@@ -2,17 +2,16 @@ import { createHash } from "crypto";
 import * as libqp from "libqp";
 import { git, revParse } from "./git";
 import { GitNotes } from "./git-notes";
-import { IGitGitGadgetOptions } from "./gitgitgadget";
+//import { IGitGitGadgetOptions } from "./gitgitgadget";
 import { GitHubGlue } from "./github-glue";
 import { IMailMetadata } from "./mail-metadata";
-import { IPatchSeriesMetadata } from "./patch-series-metadata";
 import { IParsedMBox, parseMBox,
     parseMBoxMessageIDAndReferences } from "./send-mail";
-import { SousChef } from "./sous-chef";
+////import { SousChef } from "./sous-chef";
 
-const stateKey = "git@vger.kernel.org <-> GitGitGadget";
+const stateKey = "ffmpeg-devel@ffmpeg.org <-> ffgithub";
 const replyToThisURL =
-    "https://github.com/gitgitgadget/gitgitgadget/wiki/ReplyToThis";
+    "https://github.com/ffstaging/FFmpeg/wiki/Reply-To-This";
 
 export interface IGitMailingListMirrorState {
     latestRevision?: string;
@@ -88,72 +87,75 @@ export class MailArchiveGitHelper {
                 .map((line: string) => {
                     keys.add(line.substr(53).replace(/\//g, ""));
                 });
+
+        process.stdout.write(`processMails keys_foud: ${keys.size}\n`);
+
         const seen = (messageID: string): boolean => {
             return keys.has(MailArchiveGitHelper.hashKey(messageID));
         };
 
-        const handleWhatsCooking = async (mbox: string): Promise<void> => {
-            const options = await this.gggNotes.get<IGitGitGadgetOptions>("");
-            if (!options || !options.openPRs) {
-                return;
-            }
-            /*
-             * This map points from branch names in `gitster/git` to their
-             * corresponding Pull Request URL.
-             */
-            const branchNameMap = new Map<string, string>();
-            for (const pullRequestURL of Object.keys(options.openPRs)) {
-                if (prFilter && !prFilter(pullRequestURL)) {
-                    continue;
-                }
-                const prMeta = await this.gggNotes
-                    .get<IPatchSeriesMetadata>(pullRequestURL);
-                if (prMeta && prMeta.branchNameInGitsterGit) {
-                    branchNameMap.set(prMeta.branchNameInGitsterGit,
-                                      pullRequestURL);
-                }
-            }
-            const sousChef = new SousChef(mbox);
-            if (!sousChef.messageID) {
-                throw new Error(`Could not parse Message-ID of ${mbox}`);
-            }
-            console.log(`Handling "${sousChef.subject}"`);
-            const whatsCookingBaseURL = "https://lore.kernel.org/git/";
-            for (const branchName of sousChef.branches.keys()) {
-                const pullRequestURL = branchNameMap.get(branchName);
-                if (pullRequestURL) {
-                    const branchBaseURL
-                        = "https://github.com/gitgitgadget/git/commits/";
-                    const info = sousChef.branches.get(branchName);
-                    const pre = info?.text
-                        .replace(/&/g, "&amp;")
-                        .replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                    let comment;
-                    if (!pre || pre.trim() === "") {
-                        comment = `The branch [\`${
-                            branchName}\`](${
-                            branchBaseURL}${
-                            branchName}) was mentioned in the "${
-                            info?.sectionName
-                            }" section of the [status updates](${
-                            whatsCookingBaseURL}${
-                            sousChef.messageID}) on the Git mailing list.`;
-                    } else {
-                        comment = `There was a [status update](${
-                            whatsCookingBaseURL}${
-                            sousChef.messageID}) in the "${
-                            info?.sectionName}" section about the branch [\`${
-                            branchName}\`](${
-                            branchBaseURL}${
-                            branchName}) on the Git mailing list:\n\n<pre>\n${
-                            pre}\n</pre>`;
-                    }
-                    console.log(`\n${pullRequestURL}: ${comment}`);
-                    await this.githubGlue
-                        .addPRComment(pullRequestURL, comment);
-                }
-            }
-        };
+        //const handleWhatsCooking = async (mbox: string): Promise<void> => {
+        //    const options = await this.gggNotes.get<IGitGitGadgetOptions>("");
+        //    if (!options || !options.openPRs) {
+        //        return;
+        //    }
+        //    /*
+        //     * This map points from branch names in `gitster/git` to their
+        //     * corresponding Pull Request URL.
+        //     */
+        //    const branchNameMap = new Map<string, string>();
+        //    for (const pullRequestURL of Object.keys(options.openPRs)) {
+        //        if (prFilter && !prFilter(pullRequestURL)) {
+        //            continue;
+        //        }
+        //        const prMeta = await this.gggNotes
+        //            .get<IPatchSeriesMetadata>(pullRequestURL);
+        //        if (prMeta && prMeta.branchNameInGitsterGit) {
+        //            branchNameMap.set(prMeta.branchNameInGitsterGit,
+        //                              pullRequestURL);
+        //        }
+        //    }
+        //    const sousChef = new SousChef(mbox);
+        //    if (!sousChef.messageID) {
+        //        throw new Error(`Could not parse Message-ID of ${mbox}`);
+        //    }
+        //    console.log(`Handling "${sousChef.subject}"`);
+        //    const whatsCookingBaseURL = "https://master.gitmailbox.com/ffmpegdev/";
+        //    for (const branchName of sousChef.branches.keys()) {
+        //        const pullRequestURL = branchNameMap.get(branchName);
+        //        if (pullRequestURL) {
+        //            const branchBaseURL
+        //                = "https://github.com/ffstaging/FFmpeg/commits/";
+        //            const info = sousChef.branches.get(branchName);
+        //            const pre = info?.text
+        //                .replace(/&/g, "&amp;")
+        //                .replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        //            let comment;
+        //            if (!pre || pre.trim() === "") {
+        //                comment = `The branch [\`${
+        //                    branchName}\`](${
+        //                    branchBaseURL}${
+        //                    branchName}) was mentioned in the "${
+        //                    info?.sectionName
+        //                    }" section of the [status updates](${
+        //                    whatsCookingBaseURL}${
+        //                    sousChef.messageID}) on the Git mailing list.`;
+        //            } else {
+        //                comment = `There was a [status update](${
+        //                    whatsCookingBaseURL}${
+        //                    sousChef.messageID}) in the "${
+        //                    info?.sectionName}" section about the branch [\`${
+        //                    branchName}\`](${
+        //                    branchBaseURL}${
+        //                    branchName}) on the Git mailing list:\n\n<pre>\n${
+        //                    pre}\n</pre>`;
+        //            }
+        //            console.log(`\n${pullRequestURL}: ${comment}`);
+        //            await this.githubGlue
+        //                .addPRComment(pullRequestURL, comment);
+        //        }
+        //    }
+        //};
 
         const mboxHandler = async (mbox: string): Promise<void> => {
                 const parsedMbox = parseMBox(mbox, true);
@@ -162,10 +164,10 @@ export class MailArchiveGitHelper {
                 }
                 const parsed =
                     parseMBoxMessageIDAndReferences(parsedMbox);
-                if (parsedMbox.subject?.match(/^What's cooking in git.git /) &&
-                    parsedMbox.from === "Junio C Hamano <gitster@pobox.com>") {
-                    return handleWhatsCooking(mbox);
-                }
+                ////if (parsedMbox.subject?.match(/^What's cooking in git.git /) &&
+                ////    parsedMbox.from === "Junio C Hamano <gitster@pobox.com>") {
+                ////    return handleWhatsCooking(mbox);
+                ////}
                 if (seen(parsed.messageID)) {
                     console.log(`Already handled: ${parsed.messageID}`);
                     return;
@@ -193,17 +195,20 @@ export class MailArchiveGitHelper {
                     }
                 }
                 if (!pullRequestURL) {
+                    process.stdout.write(`mboxHandler no pullRequestURL found for message: ${keys.size}\n`);
                     return;
                 }
+                process.stdout.write(`mboxHandler WARNING - you got a frame}\n`);
+
                 console.log(`Message-ID ${parsed.messageID
                             } (length ${mbox.length
                             }) for PR ${pullRequestURL
                             }, commit ${originalCommit
                             }, comment ID: ${issueCommentId}`);
 
-                const archiveURL = `https://lore.kernel.org/git/${
+                const archiveURL = `https://master.gitmailbox.com/ffmpegdev/${
                     parsed.messageID}`;
-                const header = `[On the Git mailing list](${archiveURL}), ` +
+                const header = `[On the FFmpeg mailing list](${archiveURL}), ` +
                     (parsedMbox.from ?
                      parsedMbox.from.replace(/ *<.*>/, "") : "Somebody") +
                      ` wrote ([reply to this](${replyToThisURL})):\n\n`;
@@ -245,6 +250,9 @@ export class MailArchiveGitHelper {
         let buffer = "";
         let counter = 0;
         const lineHandler = async (line: string): Promise<void> => {
+
+            ////process.stdout.write(`processMails lineHandler: ${line}\n`);
+
             if (line.startsWith("@@ ")) {
                 const match = line.match(/^@@ -(\d+,)?\d+ \+(\d+,)?(\d+)?/);
                 if (match) {
@@ -259,6 +267,8 @@ export class MailArchiveGitHelper {
                 if (--counter) {
                     return;
                 }
+                process.stdout.write(`processMails mboxHandler\n`);
+
                 try {
                     await mboxHandler(buffer);
                 } catch (reason) {
@@ -267,19 +277,26 @@ export class MailArchiveGitHelper {
             }
         };
 
+        process.stdout.write(`processMails before latest revision check\n`);
+
         if (!this.state.latestRevision) {
             /*
              * This is the commit in lore.kernel/git that is *just* before the
              * first ever GitGitGadget mail sent to the Git mailing list.
              */
             this.state.latestRevision =
-                "3b38d8d206c64bf3dc873ba8ae9dbd48ed43f612";
-        } else if (this.state.latestRevision ===
-            "205655703b0501ef14e0f0dddf8e57bb726fae97") {
-            this.state.latestRevision =
-                "26674e9a36ae1871f69197798d30f6d3d2af7a56";
+                "d41d9585ddfc49439af6a3660cc4879a0f873c5b";
+
+            process.stdout.write(`processMails set latest rev to org value\n`);
+        //} else if (this.state.latestRevision ===
+        //    "205655703b0501ef14e0f0dddf8e57bb726fae97") {
+        //    this.state.latestRevision =
+        //        "26674e9a36ae1871f69197798d30f6d3d2af7a56";
         } else if (await revParse(this.state.latestRevision,
                                   this.mailArchiveGitDir) === undefined) {
+
+            process.stdout.write(`processMails PUBLIC_INBOX_DIR\n`);
+
             const publicInboxGitDir = process.env.PUBLIC_INBOX_DIR;
             if (publicInboxGitDir === undefined) {
                 throw new Error(`Commit ${this.state.latestRevision
@@ -317,6 +334,7 @@ export class MailArchiveGitHelper {
 
         const head = await revParse("master", this.mailArchiveGitDir);
         if (this.state.latestRevision === head) {
+            process.stdout.write(`processMails latestRevision === head\n`);
             return false;
         }
 
@@ -325,6 +343,7 @@ export class MailArchiveGitHelper {
         await git(["log", "-p", "-U99999", "--reverse", range],
                   { lineHandler, workDir: this.mailArchiveGitDir });
 
+        console.log(`Handling done`);
         this.state.latestRevision = head;
         await this.gggNotes.set(stateKey, this.state, true);
 

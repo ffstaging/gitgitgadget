@@ -22,7 +22,7 @@ export interface ISMTPOptions {
 }
 
 export async function parseHeadersAndSendMail(mbox: string,
-                                              smtpOptions: ISMTPOptions):
+    smtpOptions: ISMTPOptions):
     Promise<string> {
     return await sendMail(parseMBox(mbox), smtpOptions);
 }
@@ -41,8 +41,8 @@ function replaceAll(input: string, pattern: string, replacement: string):
  * @param {string} mbox The mail, in mbox format
  * @returns {IParsedMBox} the parsed headers/body
  */
-export function parseMBox(mbox: string, gentle?: boolean):
-    IParsedMBox {
+export function parseMBox(mbox: string, gentle?: boolean): IParsedMBox {
+
     const headerEnd = mbox.indexOf("\n\n");
     if (headerEnd < 0) {
         throw new Error("Could not parse mail");
@@ -60,13 +60,30 @@ export function parseMBox(mbox: string, gentle?: boolean):
     let subject: string | undefined;
     let to: string | undefined;
 
-    for (const line of header.split(/\n(?![ \t])/)) {
-        const colon = line.indexOf(": ");
+    let lines = header.split(/\n(?![ \t])/);
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].replace("\r\n", "\n").replace("\n", " ");
+
+        let colon = line.indexOf(": ");
+
+        //if (colon < 0 && line.endsWith(":") && i < lines.length - 1) {
+        //    process.stdout.write(`parseMBox - no colon in line, : ${mbox}\n`);
+        //    process.stdout.write(`parseMBox - line mext : ${mbox}\n`);
+        //    colon = line.length - 1;
+        //    i++;
+        //    line += lines[i];
+        //}
         if (colon < 0) {
-            throw new Error(`Failed to parse header line '${line}`);
+            ////process.stdout.write(`parseMBox - no colon in line, just ignore that for now: ${mbox}\n`);
+            process.stdout.write(`parseMBox - no colon in line, just ignore that for now\n`);
+
+            continue;
+            //throw new Error(`Failed to parse header line '${line}`);
         }
         const key = line.substr(0, colon);
-        const value = replaceAll(line.substr(colon + 2), "\n ", " ");
+        let value = replaceAll(line.substr(colon + 2), "\n ", " ");
+        value = replaceAll(value, "\n", " ").trim();
         switch (key.toLowerCase()) {
             case "cc": cc = (cc || []).concat(value.split(", ")); break;
             case "date": date = value; break;
@@ -97,8 +114,7 @@ export function parseMBox(mbox: string, gentle?: boolean):
     };
 }
 
-export function parseMBoxMessageIDAndReferences(parsed: IParsedMBox):
-        {messageID: string; references: string[]} {
+export function parseMBoxMessageIDAndReferences(parsed: IParsedMBox): { messageID: string; references: string[] } {
     const references: string[] = [];
     const seen: Set<string> = new Set<string>();
     /*
@@ -117,7 +133,7 @@ export function parseMBoxMessageIDAndReferences(parsed: IParsedMBox):
         if (header.key === "In-Reply-To" || header.key === "References") {
             let value: string = header.value;
             while (value) {
-                const match = value.match(msgIdRegex);
+                const match: any = value.match(msgIdRegex);
                 if (!match) {
                     if (value !== undefined && !value.match(/^\s*$/)) {
                         throw new Error(`Error parsing Message-ID '${value}'`);
@@ -143,7 +159,7 @@ export function parseMBoxMessageIDAndReferences(parsed: IParsedMBox):
 }
 
 export async function sendMail(mail: IParsedMBox,
-                               smtpOptions: ISMTPOptions):
+    smtpOptions: ISMTPOptions):
     Promise<string> {
     const transportOpts: SMTPTransport.Options = {
         auth: {
@@ -157,12 +173,12 @@ export async function sendMail(mail: IParsedMBox,
     if (smtpOptions.smtpOpts) {
         // Add quoting for JSON.parse
         const smtpOpts = smtpOptions.smtpOpts
-            .replace(/([ {])([a-zA-Z0-9.]+?) *?:/g,"$1\"$2\":");
+            .replace(/([ {])([a-zA-Z0-9.]+?) *?:/g, "$1\"$2\":");
         Object.assign(transportOpts, JSON.parse(smtpOpts));
     }
 
     return new Promise<string>((resolve, reject) => {
-        const transporter = createTransport( transportOpts );
+        const transporter = createTransport(transportOpts);
 
         // setup email data with unicode symbols
         const mailOptions: SendMailOptions = {

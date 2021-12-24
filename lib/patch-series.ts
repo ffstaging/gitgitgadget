@@ -440,7 +440,7 @@ export class PatchSeries {
     protected static insertCcAndFromLines(mails: string[], thisAuthor: string,
                                           senderName?: string):
         void {
-        const isGitGitGadget = thisAuthor.match(/^GitGitGadget </);
+        const isGitGitGadget = thisAuthor.match(/^ffmpeg-codebot </);
 
         mails.map((mail, i) => {
             const match = mail.match(/^([^]*?)(\n\n[^]*)$/);
@@ -465,8 +465,8 @@ export class PatchSeries {
                 replaceSender = "\""
                     + onBehalfOf.replace(/^"(.*)"$/, "$1")
                                 .replace(/"/g, "\\\"")
-                    + " via GitGitGadget\" "
-                    + thisAuthor.replace(/^GitGitGadget /, "");
+                    + " via ffmpeg-codebot\" "
+                    + thisAuthor.replace(/^ffmpeg-codebot /, "");
             } else if (authorMatch[2] === thisAuthor) {
                 return;
             }
@@ -728,7 +728,7 @@ export class PatchSeries {
             if (prMatch) {
                 const infix = this.metadata.iteration > 1 ?
                     `.v${this.metadata.iteration}` : "";
-                const repoInfix = prMatch[1] === "gitgitgadget" ?
+                const repoInfix = prMatch[1] === "ffmpeg-codebot" ?
                     prMatch[2] : `${prMatch[1]}.${prMatch[2]}`;
                 const newCoverMid =
                     `pull.${prMatch[3]}${infix}.${repoInfix}.${
@@ -754,7 +754,7 @@ export class PatchSeries {
             const [owner, , prNumber] =
                 GitGitGadget.parsePullRequestURL(this.metadata.pullRequestURL);
             const branch = this.metadata.headLabel.replace(/:/g, "/");
-            const tagPrefix = owner === "gitgitgadget" ? "pr-" : `pr-${owner}-`;
+            const tagPrefix = owner === "ffmpeg-codebot" ? "pr-" : `pr-${owner}-`;
             tagName = `${tagPrefix}${prNumber}/${branch}-v${
                 this.metadata.iteration}`;
         }
@@ -788,7 +788,7 @@ export class PatchSeries {
         const footers: string[] = [];
 
         if (pullRequestURL) {
-            const prefix = "https://github.com/gitgitgadget/git";
+            const prefix = "https://github.com/ffstaging/FFmpeg";
             const tagName2 = encodeURIComponent(tagName);
             footers.push(`Published-As: ${prefix}/releases/tag/${tagName2}`);
             footers.push(`Fetch-It-Via: git fetch ${prefix} ${tagName}`);
@@ -920,7 +920,7 @@ export class PatchSeries {
                                      this.project.branchName],
                                     { workDir: this.project.workDir });
         const args = [
-            "format-patch", "--thread", "--stdout", "--signature=gitgitgadget",
+            "format-patch", "--thread", "--stdout", "--signature=ffmpeg-codebot",
             "--add-header=Fcc: Sent",
             "--base", mergeBase, this.project.to,
         ].concat(PatchSeries.generateSingletonHeaders());

@@ -1,10 +1,21 @@
-# Welcome to [GitGitGadget](https://gitgitgadget.github.io/)
+## Welcome to [FFmpeg](https://www.ffmpeg.org/)
 
-Hi @${username}, and welcome to GitGitGadget, the GitHub App to send patch series to the Git mailing list from GitHub Pull Requests.
+Hi @${username},
+
+This is the FFmpeg Code Bot for GitHub, which enables sending of patch series to the FFmpeg mailing list from GitHub Pull Requests. It is an adaption of [GitGitGadget](https://gitgitgadget.github.io/) and credits belong to its creators.
+
+You are here to submit a contribution to FFmpeg? That's great!
+We try to make that process as easy and straightworward as possible, but there are still a number of things to consider. 
+
+
+### Prerequisites
+
+First of all, make sure that you have read the through the [Devloper Documentation](https://www.ffmpeg.org/developer.html)
+
 
 Please make sure that your Pull Request has a good description, as it will be used as cover letter.
 
-Also, it is a good idea to review the commit messages one last time, as the Git project expects them in a quite specific form:
+Also, it is a good idea to review the commit messages one last time, as the FFmpeg project expects them in a quite specific form:
 
 * the lines should not exceed 76 columns,
 * the first line should be like a header and typically start with a prefix like "tests:" or "revisions:" to state which subsystem the change is about, and
@@ -13,17 +24,17 @@ Also, it is a good idea to review the commit messages one last time, as the Git 
 
 It is in general a good idea to await the automated test ("Checks") in this Pull Request before contributing the patches, e.g. to avoid trivial issues such as unportable code.
 
-## Contributing the patches
+### Submitting your Patchset
 
-Before you can contribute the patches, your GitHub username needs to be added to the list of permitted users. Any already-permitted user can do that, by adding a comment to your PR of the form `/allow`. A good way to find other contributors is to locate recent pull requests where someone has been `/allow`ed:
+Before you can submit the patches, your GitHub username needs to be added to the list of permitted users. Any already-permitted user can do that, by adding a comment to your PR of the form `/allow`. A good way to find other contributors is to locate recent pull requests where someone has been `/allow`ed:
 
-* [Search: is:pr is:open "/allow"](https://github.com/gitgitgadget/git/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aopen+%22%2Fallow%22)
+* [Search: is:pr is:open "/allow"](https://github.com/ffstaging/FFmpeg/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aopen+%22%2Fallow%22)
 
 Both the person who commented `/allow` and the PR author are able to `/allow` you.
 
-An alternative is the channel [`#git-devel`](https://web.libera.chat/#git-devel) on the Libera Chat IRC network:
+An alternative is the channel [`#ffmpeg-devel`](https://www.ffmpeg.org/developer.html) on the Libera Chat IRC network:
 
-    <newcontributor> I've just created my first PR, could someone please /allow me? https://github.com/gitgitgadget/git/pull/12345
+    <newcontributor> I've just created my first PR, could someone please /allow me? https://github.com/ffstaging/FFmpeg/pull/12345
     <veteran> newcontributor: it is done
     <newcontributor> thanks!
 
@@ -31,15 +42,9 @@ Once on the list of permitted usernames, you can contribute the patches to the G
 
 If you want to see what email(s) would be sent for a `/submit` request, add a PR comment `/preview` to have the email(s) sent to you.  You must have a public GitHub email address for this.
 
-After you submit, GitGitGadget will respond with another comment that contains the link to the cover letter mail in the Git mailing list archive. Please make sure to monitor the discussion in that thread and to address comments and suggestions (while the comments and suggestions will be mirrored into the PR by GitGitGadget, you will still want to [reply via mail](https://github.com/gitgitgadget/gitgitgadget/wiki/ReplyToThis)).
+After you submit, the Code Bot will respond with another comment that contains the link to the cover letter mail in the FFmpeg mailing list archive. Please make sure to monitor the discussion in that thread and to address comments and suggestions (while the comments and suggestions will be mirrored into the PR by the Code Bot, you will still want to [reply via mail](https://github.com/ffstaging/FFmpeg/wiki/Reply-To-This)).
 
-If you do not want to subscribe to the Git mailing list just to be able to respond to a mail, you can download the mbox from the [Git mailing list archive](https://lore.kernel.org/git) (click the `(raw)` link), then import it into your mail program. If you use GMail, you can do this via:
-
-```sh
-curl -g --user "<EMailAddress>:<Password>" \
-    --url "imaps://imap.gmail.com/INBOX" -T /path/to/raw.txt
-```
-
+### Submitting Revised Patch Versions
 To iterate on your change, i.e. send a revised patch or patch series, you will first want to (force-)push to the same branch. You probably also want to modify your Pull Request description (or title). It is a good idea to summarize the revision by adding something like this to the cover letter (read: by editing the first comment on the PR, i.e. the PR description):
 
 ```
@@ -51,8 +56,20 @@ Changes since v1:
 
 To send a new iteration, just add another PR comment with the contents: `/submit`.
 
-## Need help?
+### Further Reference
 
-New contributors who want advice are encouraged to join [git-mentoring@googlegroups.com](https://groups.google.com/forum/#!forum/git-mentoring), where volunteers who regularly contribute to Git are willing to answer newbie questions, give advice, or otherwise provide mentoring to interested contributors. You must join in order to post or view messages, but anyone can join.
+- [Documentation](https://www.ffmpeg.org/documentation.html)
+- [Mailing Lists](https://www.ffmpeg.org/contact.html)
+- [Wiki](https://trac.ffmpeg.org/)
+- [Bug Tracker](https://trac.ffmpeg.org/report)
+- [Patchwork CI](https://patchwork.ffmpeg.org/project/ffmpeg/list/)
+- [IRC - #ffmpeg-devel](https://web.libera.chat/#ffmpeg-devel)
 
-You may also be able to find help in real time in the developer IRC channel, [`#git-devel`](https://web.libera.chat/#git-devel) on Libera Chat. Remember that IRC does not support offline messaging, so if you send someone a private message and log out, they cannot respond to you. The scrollback of `#git-devel` is [archived](https://colabti.org/irclogger//irclogger_logs/git-devel), though.
+### Bot Interaction
+
+I'm the interactive FFmpeg Code Bot for GitHub. My elder brother [GitGitGadget](https://gitgitgadget.github.io/) is assisting in development of [GIT itself](https://github.com/git/git).
+Credits are due to my original creators at [GitGitGadget](https://github.com/gitgitgadget/gitgitgadget).
+
+##### Did you know?
+
+You can post a comment containing `/help` to get a list of commands that I understand.  

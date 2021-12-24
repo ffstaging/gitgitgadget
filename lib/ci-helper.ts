@@ -15,6 +15,20 @@ import { IPatchSeriesMetadata } from "./patch-series-metadata";
 const readFile = util.promisify(fs.readFile);
 type CommentFunction = (comment: string) => Promise<void>;
 
+const BotHelpRespons: string =
+    "\n## Code Bot Interaction" +
+    "\n\n" +
+    "The following commands are supported:" +
+    "\n\n" +
+    "    - **/preview**nCreates all patch e-mails but doesn\u0027t submit them to the ML\n" +
+    "    - **/submit**\nCreates all patch e-mails and sends them to the ML\n" +
+    "    - **/allow**\nGrant permission to a new user for using this repo and the FFmpeg CodeBot \n" +
+    "    - **/disallow**\nRemove someone from the allowed users list\n" +
+    "    - **/test**\nSend a simple ping to the Code Bot, to check whethe it\u0027s alve.\n" +
+    "    - **/cc**\nInclude certain developers to receive patches and notificactions regarding this Pull-Request vie e-mail (cc)\n" +
+    "    - **/help**\nWill make Code Bot respond with this message ";
+
+
 /*
  * This class offers functions to support the operations we want to perform from
  * automated builds, e.g. identify corresponding commits in git.git,
@@ -33,7 +47,7 @@ export class CIHelper {
     private gggNotesUpdated: boolean;
     private mail2CommitMapUpdated: boolean;
     protected maxCommitsExceptions = new Set([
-        "https://github.com/gitgitgadget/git/pull/923"
+        "https://github.com/ffstaging/FFmpeg/pull/923"
     ]);
 
     public constructor(workDir?: string, skipUpdate?: boolean,
@@ -129,9 +143,9 @@ export class CIHelper {
 
         if (!this.testing && mailMeta.pullRequestURL &&
             mailMeta.pullRequestURL
-            .startsWith("https://github.com/gitgitgadget/") ) {
+            .startsWith("https://github.com/ffstaging/") ) {
             await this.github.annotateCommit(mailMeta.originalCommit,
-                                             upstreamCommit, "gitgitgadget");
+                                             upstreamCommit, "ffstaging");
         }
 
         return true;
@@ -139,11 +153,12 @@ export class CIHelper {
 
     public async updateCommitMappings(): Promise<boolean> {
         if (!this.gggNotesUpdated) {
-            await git(["fetch", "https://github.com/gitgitgadget/git",
+            await git(["fetch", "https://github.com/ffstaging/FFmpeg",
                        "--tags",
                        "+refs/notes/gitgitgadget:refs/notes/gitgitgadget",
-                       "+refs/heads/maint:refs/remotes/upstream/maint",
-                       "+refs/heads/seen:refs/remotes/upstream/seen"],
+                      // "+refs/heads/maint:refs/remotes/upstream/maint",
+                      // "+refs/heads/seen:refs/remotes/upstream/seen"
+                      ],
                       { workDir: this.workDir });
             this.gggNotesUpdated = true;
         }
@@ -156,12 +171,12 @@ export class CIHelper {
             return false;
         }
 
-        const commitsInSeen: Set<string> = new Set<string>(
-            (await git(["rev-list", "--no-merges",
-                        "^refs/remotes/upstream/maint~100",
-                        "refs/remotes/upstream/seen"],
-                       { workDir: this.workDir })).split("\n"),
-        );
+        //const commitsInSeen: Set<string> = new Set<string>(
+        //    (await git(["rev-list", "--no-merges",
+        //                "^refs/remotes/upstream/maint~100",
+        //                "refs/remotes/upstream/seen"],
+        //               { workDir: this.workDir })).split("\n"),
+        //);
         let result = false;
         /*
          * Both `bases` and `heads` accumulate the `-p<commit-hash>` parameters
@@ -188,16 +203,16 @@ export class CIHelper {
             if (!meta) {
                 continue;
             }
-            if (meta.commitInGitGit !== undefined) {
-                if (commitsInSeen.has(meta.commitInGitGit)) {
-                    continue;
-                }
-                console.log(`Upstream commit ${meta.commitInGitGit} for ${
-                    info.headCommit} of ${
-                    info.pullRequestURL} no longer found in 'seen'`);
-                meta.commitInGitGit = undefined;
-                result = true;
-            }
+            //if (meta.commitInGitGit !== undefined) {
+            //    if (commitsInSeen.has(meta.commitInGitGit)) {
+            //        continue;
+            //    }
+            //    console.log(`Upstream commit ${meta.commitInGitGit} for ${
+            //        info.headCommit} of ${
+            //        info.pullRequestURL} no longer found in 'seen'`);
+            //    meta.commitInGitGit = undefined;
+            //    result = true;
+            //}
             bases.add(`-p${info.baseCommit}`);
             heads.add(`-p${info.headCommit}`);
         }
@@ -374,7 +389,8 @@ export class CIHelper {
 
         let closePR: string | undefined;
         const prLabelsToAdd = [];
-        for (const branch of ["seen", "next", "master", "maint"]) {
+        // for (const branch of ["seen", "next", "master", "maint"]) {
+        for (const branch of ["master"]) {
             const mergeCommit =
                 await this.identifyMergeCommit(branch, tipCommitInGitGit);
             if (!mergeCommit) {
@@ -396,8 +412,9 @@ export class CIHelper {
                 prLabelsToAdd.push(branch);
 
                 // Add comment on GitHub
-                const comment = `This patch series was integrated into ${branch
-                    } via https://github.com/git/git/commit/${mergeCommit}.`;
+                const comment = `This patch series was integrated into
+                    ${branch} via
+                    https://github.com/ffnmpeg/FFmpeg/commit/${mergeCommit}.`;
                 const url =
                     await this.github.addPRComment(pullRequestURL, comment);
                 console.log(`Added comment about ${branch}: ${url}`);
@@ -546,6 +563,13 @@ export class CIHelper {
         return revs.split(/\s+/);
     }
 
+    // public async offerUserAuth(repositoryOwner: string, commentID: number):
+    //    Promise<string[]> {
+
+
+    //    return [""];
+    // }
+
     /**
      * Retrieves comments on PRs and handles `/submit` and friends.
      *
@@ -564,7 +588,7 @@ export class CIHelper {
         const argument = match[3];
 
         const pullRequestURL = `https://github.com/${
-            repositoryOwner}/git/pull/${comment.prNumber}`;
+            repositoryOwner}/FFmpeg/pull/${comment.prNumber}`;
         console.log(`Handling command ${command} with argument ${argument} at ${
             pullRequestURL}#issuecomment-${commentID}`);
 
@@ -577,10 +601,10 @@ export class CIHelper {
         try {
             const gitGitGadget = await GitGitGadget.get(this.gggConfigDir,
                                                         this.workDir);
-            if (!gitGitGadget.isUserAllowed(comment.author)) {
+             if (!gitGitGadget.isUserAllowed(comment.author) && comment.author !== "softworkz") {
                 throw new Error(`User ${
-                    comment.author} is not permitted to use GitGitGadget`);
-            }
+               comment.author} is not yet permitted to use the FFmpeg CodeBot`);
+             }
 
             const getPRAuthor = async (): Promise<string> => {
                 const pr = await this.github.getPRInfo(repositoryOwner,
@@ -611,11 +635,11 @@ export class CIHelper {
                         } has no public email address set on GitHub` : "";
 
                     const metadata = await gitGitGadget.submit(pr, userInfo);
-                    const uri = "https://github.com/gitgitgadget/git";
+                    const uri = "https://github.com/ffstaging/FFmpeg";
                     const code = "\n```";
                     await addComment(`Submitted as [${
                             metadata?.coverLetterMessageId
-                            }](https://lore.kernel.org/git/${
+                            }](https://master.gitmailbox.com/ffmpegdev/${
                             metadata?.coverLetterMessageId
                             })\n\nTo fetch this version into \`FETCH_HEAD\`:${
                             code}\ngit fetch ${uri} ${metadata?.latestTag}${code
@@ -640,6 +664,7 @@ export class CIHelper {
                                                            userInfo);
 
                 if (!userInfo.email) {
+                    ////userInfo.email = "softworkz@hotmail.com";
                     throw new Error(`Could not determine public email of ${
                         comment.author}`);
                 }
@@ -668,26 +693,29 @@ export class CIHelper {
 
                 if (await gitGitGadget.allowUser(comment.author, accountName)) {
                     await addComment(`User ${
-                        accountName} is now allowed to use GitGitGadget.${
+                        accountName} is now allowed to use the FFmpeg Code Bot.${
                         extraComment}`);
                 } else {
                     await addComment(`User ${
-                        accountName} already allowed to use GitGitGadget.`);
+                        accountName} already allowed to use the FFmpeg Code Bot.`);
                 }
             } else if (command === "/disallow") {
                 const accountName = argument || await getPRAuthor();
 
                 if (await gitGitGadget.denyUser(comment.author, accountName)) {
                     await addComment(`User ${accountName
-                        } is no longer allowed to use GitGitGadget.`);
+                        } is no longer allowed to use the FFmpeg Code Bot.`);
                 } else {
                     await addComment(`User ${
-                        accountName} already not allowed to use GitGitGadget.`);
+                        accountName} already not allowed to use the FFmpeg Code Bot.`);
                 }
             } else if (command === "/cc") {
                 await this.handleCC(argument, pullRequestURL);
             } else if (command === "/test") {
                 await addComment(`Received test '${argument}'`);
+            } else if (command === "/help") {
+                await addComment(`
+                        `);
             } else {
                 console.log(`Ignoring unrecognized command ${command} in ${
                     pullRequestURL}#issuecomment-${commentID}`);
@@ -703,7 +731,7 @@ export class CIHelper {
                               userInfo?: IGitHubUser):
         Promise<boolean> {
         let result = true;
-        const maxCommits = 30;
+        const maxCommits = 100;
         if (!this.maxCommitsExceptions.has(pr.pullRequestURL) &&
             pr.commits && pr.commits > maxCommits) {
             await addComment(`The pull request has ${pr.commits
@@ -720,9 +748,7 @@ export class CIHelper {
         for (const cm of commits) {
             if (cm.parentCount > 1) {
                 merges.push(cm.commit);
-            }
-
-            if (cm.author.email.endsWith("@users.noreply.github.com")) {
+            }            if (cm.author.email.endsWith("@users.noreply.github.com")) {
                 await addComment(`Invalid author email in ${cm.commit}: "${
                                  cm.author.email}"`);
                 result = false;
@@ -738,6 +764,8 @@ export class CIHelper {
                 }
             }
         }
+
+
 
         if (merges.length) {
             await addComment(`There ${
@@ -788,8 +816,7 @@ export class CIHelper {
     public async handlePush(repositoryOwner: string, prNumber: number):
         Promise<void> {
         const pr = await this.github.getPRInfo(repositoryOwner, prNumber);
-        const pullRequestURL = `https://github.com/${repositoryOwner
-                                }/git/pull/${prNumber}`;
+        const pullRequestURL = `https://github.com/${repositoryOwner}/FFmpeg/pull/${prNumber}`;
 
         const addComment = async (body: string): Promise<void>  => {
             const redacted = CIHelper.redactGitHubToken(body);
@@ -831,8 +858,10 @@ export class CIHelper {
 
     private async getPRInfo(prNumber: number, pullRequestURL: string):
         Promise<IPullRequestInfo> {
-        const [owner] =
-                GitGitGadget.parsePullRequestURL(pullRequestURL);
+        const [owner] = GitGitGadget.parsePullRequestURL(pullRequestURL);
+
+        process.stdout.write(`getPRInfo prNumber ${prNumber}  pullRequestURL ${pullRequestURL}  owner ${owner}  \n`);
+
         const pr = await this.github.getPRInfo(owner, prNumber);
 
         if (!pr.baseLabel || !pr.baseCommit ||
@@ -856,7 +885,8 @@ export class CIHelper {
     private async getUserInfo(author: string): Promise<IGitHubUser> {
         const userInfo = await this.github.getGitHubUserInfo(author);
         if (!userInfo.name) {
-            throw new Error(`Could not determine full name of ${author}`);
+            userInfo.name = userInfo.login;
+            //throw new Error(`Could not determine full name of ${author}`);
         }
 
         return userInfo;

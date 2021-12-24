@@ -211,10 +211,10 @@ export class GitGitGadget {
             this.publishTagsAndNotesToRemote,
             "--",
             `+${this.notes.notesRef}:${this.notes.notesRef}`,
-            "+refs/heads/maint:refs/remotes/upstream/maint",
+            //"+refs/heads/maint:refs/remotes/upstream/maint",
             "+refs/heads/master:refs/remotes/upstream/master",
-            "+refs/heads/next:refs/remotes/upstream/next",
-            "+refs/heads/seen:refs/remotes/upstream/seen",
+        //    "+refs/heads/next:refs/remotes/upstream/next",
+        //    "+refs/heads/seen:refs/remotes/upstream/seen",
         ];
         const prArgs = [
             `+${pullRequestRef}:${pullRequestRef}`,
@@ -223,10 +223,10 @@ export class GitGitGadget {
         if (additionalRef) {
             args.push(`+${additionalRef}:${additionalRef}`);
         }
-        if (repositoryOwner === "gitgitgadget") {
+        if (repositoryOwner === "ffstaging") {
             args.push(...prArgs);
         } else {
-            prArgs.unshift("fetch", `https://github.com/${repositoryOwner}/git`,
+            prArgs.unshift("fetch", `https://github.com/${repositoryOwner}/FFmpeg`,
                            "--");
             await git(prArgs, { workDir: this.workDir });
         }
@@ -263,8 +263,8 @@ export class GitGitGadget {
                                send: SendFunction):
         Promise<IPatchSeriesMetadata | undefined> {
 
-        if (!new Set(["gitgitgadget", "dscho", "git"]).has(pr.baseOwner) ||
-            pr.baseRepo !== "git") {
+        if (!new Set(["ffstaging", "FFmpeg"]).has(pr.baseOwner) ||
+            pr.baseRepo !== "FFmpeg") {
             throw new Error(`Unsupported repository: ${pr.pullRequestURL}`);
         }
 
