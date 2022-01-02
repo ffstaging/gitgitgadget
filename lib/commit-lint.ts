@@ -71,6 +71,14 @@ export class LintCommit {
             this.block("The first line must be separated from the rest by an "
                         + "empty line");
         }
+
+        for (let i = 2; i < this.lines.length; i++) {
+            if (this.lines[i].length > 72) {
+                this.block("Please wrap lines in the body of the commit " +
+                    "message between 60 and 72 characters.");
+                break;
+            }
+        }
     }
 
     // Verify if the first line starts with a prefix (e.g. tests:), it continues
