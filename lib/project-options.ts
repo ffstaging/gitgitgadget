@@ -39,7 +39,7 @@ export class ProjectOptions {
         let to: string;
         let midUrlPrefix = " Message-ID: ";
 
-        to = "--to=ffmpegdev@gitmailbox.com";
+        to = "--to=ffmpeg-devel@ffmpeg.org";
         upstreamBranch = "FFmpeg/master";
 
         midUrlPrefix = "https://master.gitmailbox.com/ffmpegdev/";
