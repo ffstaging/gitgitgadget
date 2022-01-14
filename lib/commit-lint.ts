@@ -34,7 +34,7 @@ export class LintCommit {
 
         this.commitMessageLength();
         this.bangPrefix();
-        this.lowerCaseAfterPrefix();
+        ////this.lowerCaseAfterPrefix();
         this.signedOffBy();
         this.moreThanAHyperlink();
 
@@ -61,13 +61,13 @@ export class LintCommit {
     // - the first line should be followed by an empty line
 
     private commitMessageLength(): void {
-        const maxColumns = 76;
+        const maxColumns = 100;
         if (this.lines[0].length > maxColumns) {
             this.block(`First line of commit message is too long (> ${
                 maxColumns} columns): ${this.lines[0]}`);
         }
 
-        if (this.lines[1].length) {
+        if (this.lines.length > 0 && this.lines[1].length) {
             this.block("The first line must be separated from the rest by an "
                         + "empty line");
         }
