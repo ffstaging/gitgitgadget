@@ -225,7 +225,7 @@ export class PatchSeries {
         return new PatchSeries(notes, options, project, metadata,
                                rangeDiff, patchCount,
                                coverLetter,
-                               senderName);
+                               senderName, senderEmail ?? undefined);
     }
 
     protected static async parsePullRequest(workDir: string,
@@ -437,7 +437,7 @@ export class PatchSeries {
             .replace(/["\\\\]/g, "\\$&")}"${match[2]}${match[3]}`;
     }
 
-    protected static insertCcAndFromLines(mails: string[], thisAuthor: string,
+    protected static insertCcAndFromLines(logger: ILogger, mails: string[], thisAuthor: string,
                                           senderName?: string):
         void {
         const isGitGitGadget = thisAuthor.match(/^ffmpeg-codebot </);
@@ -456,6 +456,13 @@ export class PatchSeries {
             }
 
             let replaceSender = PatchSeries.encodeSender(thisAuthor);
+
+            logger?.log(`thisAuthor: ${thisAuthor}`);
+            logger?.log(`isGitGitGadget: ${isGitGitGadget}`);
+            logger?.log(`authorMatch[1]: ${authorMatch[1]}`);
+            logger?.log(`authorMatch[2]: ${authorMatch[2]}`);
+            logger?.log(`authorMatch[3]: ${authorMatch[3]}`);
+
             if (isGitGitGadget) {
                 const onBehalfOf = i === 0 && senderName ?
                     PatchSeries.encodeSender(senderName) :
@@ -486,7 +493,11 @@ export class PatchSeries {
                 header += "\nCc: " + authorMatch[2];
             }
 
+            logger?.log(`header: ${header}`);
+
             mails[i] = header + "\n\nFrom: " + authorMatch[2] + match[2];
+
+
         });
     }
 
@@ -635,13 +646,14 @@ export class PatchSeries {
     public readonly rangeDiff: string;
     public readonly coverLetter?: string;
     public readonly senderName?: string;
+    public readonly senderEmail?: string;
     public readonly patchCount: number;
 
     protected constructor(notes: GitNotes, options: PatchSeriesOptions,
                           project: ProjectOptions,
                           metadata: IPatchSeriesMetadata, rangeDiff: string,
-                          patchCount: number,
-                          coverLetter?: string, senderName?: string) {
+                          patchCount: number, coverLetter?: string,
+                          senderName?: string, senderEmail?: string) {
         this.notes = notes;
         this.options = options;
         this.project = project;
@@ -649,6 +661,7 @@ export class PatchSeries {
         this.rangeDiff = rangeDiff;
         this.coverLetter = coverLetter;
         this.senderName = senderName;
+        this.senderEmail = senderEmail;
         this.patchCount = patchCount;
     }
 
@@ -683,15 +696,23 @@ export class PatchSeries {
         const ident = await git(["var", "GIT_AUTHOR_IDENT"], {
             workDir: this.project.workDir,
         });
+
+        logger.log(`GIT_AUTHOR_IDENT: ${ident}`);
+
         const match = ident.match(/.*>/);
         const thisAuthor = match && match[0];
         if (!thisAuthor) {
             throw new Error("Could not determine author ident from " + ident);
         }
 
+        logger.log(`thisAuthor: ${thisAuthor}`);
+        logger.log(`senderName: ${this.senderName}`);
+        logger.log(`senderEmail: ${this.senderEmail}`);
+
         logger.log("Adding Cc: and explicit From: lines for other authors, "
             + "if needed");
-        PatchSeries.insertCcAndFromLines(mails, thisAuthor, this.senderName);
+        PatchSeries.insertCcAndFromLines(logger, mails, thisAuthor, this.senderName);
+
         if (mails.length > 1) {
             if (this.coverLetter) {
                 const match2 = mails[0].match(

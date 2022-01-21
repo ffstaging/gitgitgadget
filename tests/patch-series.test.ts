@@ -1,6 +1,6 @@
 import { expect, jest, test } from "@jest/globals";
 import { git } from "../lib/git";
-import { PatchSeries } from "../lib/patch-series";
+import { PatchSeries, ILogger } from "../lib/patch-series";
 import { testCreateRepo } from "./test-lib";
 
 jest.setTimeout(60000);
@@ -86,7 +86,7 @@ class PatchSeriesTest extends PatchSeries {
 
         const thisAuthor = "GitGitGadget <gitgitgadget@gmail.com>";
         const senderName = "Nguyễn Thái Ngọc Duy";
-        PatchSeries.insertCcAndFromLines(mails, thisAuthor, senderName);
+        PatchSeries.insertCcAndFromLines(null as ILogger, mails, thisAuthor, senderName);
 
         test("non-ASCII characters are encoded correctly", () => {
             const needle = "\"=?UTF-8?Q?Nguy=E1=BB=85n_Th=C3=A1i_Ng=E1=BB=8Dc?="
