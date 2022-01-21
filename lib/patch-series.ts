@@ -440,7 +440,7 @@ export class PatchSeries {
     protected static insertCcAndFromLines(logger: ILogger, mails: string[], thisAuthor: string,
                                           senderName?: string):
         void {
-        const isGitGitGadget = thisAuthor.match(/^ffmpeg-codebot </);
+        const isGitGitGadget = thisAuthor.match(/^ffmpegagent </);
 
         mails.map((mail, i) => {
             const match = mail.match(/^([^]*?)(\n\n[^]*)$/);
@@ -457,23 +457,18 @@ export class PatchSeries {
 
             let replaceSender = PatchSeries.encodeSender(thisAuthor);
 
-            logger?.log(`thisAuthor: ${thisAuthor}`);
-            logger?.log(`isGitGitGadget: ${isGitGitGadget}`);
-            logger?.log(`authorMatch[1]: ${authorMatch[1]}`);
-            logger?.log(`authorMatch[2]: ${authorMatch[2]}`);
-            logger?.log(`authorMatch[3]: ${authorMatch[3]}`);
-
             if (isGitGitGadget) {
                 const onBehalfOf = i === 0 && senderName ?
                     PatchSeries.encodeSender(senderName) :
                     authorMatch[2].replace(/ <.*>$/, "");
                 // Special-case GitGitGadget to send from
                 // "<author> via GitGitGadget"
-                replaceSender = "\""
+                replaceSender = authorMatch[2] + "\nSender: \""
                     + onBehalfOf.replace(/^"(.*)"$/, "$1")
                                 .replace(/"/g, "\\\"")
                     + " via ffmpeg-codebot\" "
-                    + thisAuthor.replace(/^ffmpeg-codebot /, "");
+                    + thisAuthor.replace(/^ffmpegagent /, "");
+
             } else if (authorMatch[2] === thisAuthor) {
                 return;
             }
@@ -493,7 +488,7 @@ export class PatchSeries {
                 header += "\nCc: " + authorMatch[2];
             }
 
-            logger?.log(`header: ${header}`);
+            logger?.log(`\nheader:\n${header}\n**************`);
 
             mails[i] = header + "\n\nFrom: " + authorMatch[2] + match[2];
 

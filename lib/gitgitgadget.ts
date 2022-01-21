@@ -178,6 +178,8 @@ export class GitGitGadget {
         }
         const email = userInfo.email;
 
+        console.log("ggg.preview called - email: " + email);
+
         const send = async (mail: string): Promise<string> => {
             const mbox = parseMBox(mail);
             mbox.cc = [];
