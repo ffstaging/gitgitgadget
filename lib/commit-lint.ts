@@ -67,7 +67,7 @@ export class LintCommit {
                 maxColumns} columns): ${this.lines[0]}`);
         }
 
-        if (this.lines.length > 0 && this.lines[1].length) {
+        if (this.lines.length > 1 && this.lines[1].length) {
             this.block("The first line must be separated from the rest by an "
                         + "empty line");
         }
