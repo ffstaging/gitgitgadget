@@ -131,6 +131,9 @@ export class LintCommit {
     // Hyperlink validation is NOT part of the test.
 
     private moreThanAHyperlink(): void {
+        if (this.lines.length < 3)
+            return;
+        
         const line = this.lines[2];
         const match = line.match(/^(\w*)\s*https*:\/\/\S+\s*(\w*)/);
 
