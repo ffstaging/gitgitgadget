@@ -35,7 +35,7 @@ export class LintCommit {
         this.commitMessageLength();
         this.bangPrefix();
         ////this.lowerCaseAfterPrefix();
-        this.signedOffBy();
+        ////this.signedOffBy();
         this.moreThanAHyperlink();
 
         if (this.messages.length) {
