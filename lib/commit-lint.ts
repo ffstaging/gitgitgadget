@@ -73,7 +73,7 @@ export class LintCommit {
         }
 
         for (let i = 2; i < this.lines.length; i++) {
-            if (this.lines[i].length > 72) {
+            if (this.lines[i].length > 80) {
                 this.block("Please wrap lines in the body of the commit " +
                     "message between 60 and 72 characters.");
                 break;
