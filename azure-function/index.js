@@ -72,6 +72,7 @@ const triggerAzurePipeline = async (token, organization, project, buildDefinitio
         headers: headers
     };
 
+
     return new Promise((resolve, reject) => {
         const handleResponse = (res, err) => {
             res.setEncoding('utf8');
