@@ -53,7 +53,7 @@ const validateGitHubWebHook = (req) => {
 const triggerAzurePipeline = async (token, organization, project, buildDefinitionId, sourceBranch, parameters) => {
     const auth = Buffer.from('PAT:' + token).toString('base64');
     const headers = {
-        'Accept': 'application/json; api-version=5.0-preview.5; excludeUrls=true',
+        'Accept': 'application/json; api-version=5.0; excludeUrls=true',
         'Authorization': 'Basic ' + auth,
     };
     const json = JSON.stringify({
@@ -67,11 +67,10 @@ const triggerAzurePipeline = async (token, organization, project, buildDefinitio
     const requestOptions = {
         host: 'dev.azure.com',
         port: '443',
-        path: `/${organization}/${project}/_apis/build/builds?ignoreWarnings=false&api-version=5.0-preview.5`,
+        path: `/${organization}/${project}/_apis/build/builds?ignoreWarnings=false&api-version=5.0`,
         method: 'POST',
         headers: headers
     };
-
 
     return new Promise((resolve, reject) => {
         const handleResponse = (res, err) => {
