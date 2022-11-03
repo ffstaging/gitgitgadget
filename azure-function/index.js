@@ -50,7 +50,7 @@ const validateGitHubWebHook = (req) => {
 //    }
 }
 
-const triggerAzurePipeline = async (token, organization, project, buildDefinitionId, sourceBranch, parameters, log) => {
+const triggerAzurePipeline = async (token, organization, project, buildDefinitionId, sourceBranch, parameters, logcont) => {
     const auth = Buffer.from('PAT:' + token).toString('base64');
     const headers = {
         'Accept': 'application/json; api-version=5.0; excludeUrls=true',
@@ -72,7 +72,7 @@ const triggerAzurePipeline = async (token, organization, project, buildDefinitio
         headers: headers
     };
 
-    log += requestOptions.path + '\n';
+    logcont.log += requestOptions.path + '\n';
 
     return new Promise((resolve, reject) => {
         const handleResponse = (res, err) => {
@@ -82,13 +82,13 @@ const triggerAzurePipeline = async (token, organization, project, buildDefinitio
                 response += chunk;
             });
             res.on('end', () => {
-                log += 'triggerAzurePipeline response: ' + response + '\n';
+                logcont.log += 'triggerAzurePipeline response: ' + response + '\n';
                 console.log('triggerAzurePipeline response: ' + response);
                 resolve(JSON.parse(response));
             });
             res.on('triggerAzurePipeline error: ' + err,
                 (err) => {
-                    log += 'triggerAzurePipeline error: ' + err + '\n';
+                    logcont.log += 'triggerAzurePipeline error: ' + err + '\n';
                     console.log(err);
                     reject(err);
                 });
@@ -212,11 +212,11 @@ module.exports = async (req, res) => {
             if (!pipelineId || pipelineId < 1)
                 throw new Error(`No pipeline set up for org ${repositoryOwner}`);
             console.log(`Queuing with branch ${sourceBranch} and parameters ${JSON.stringify(parameters)}`);
-            let log = '';
+            let logcont = { log: 'a' };
 
-            await triggerAzurePipeline(triggerToken, 'githubsync', 'FFmpeg', pipelineId, sourceBranch, parameters, log);
+            await triggerAzurePipeline(triggerToken, 'githubsync', 'FFmpeg', pipelineId, sourceBranch, parameters, logcont);
 
-            res.end(`OK. Log: ` + log);
+            res.end(`OK. Log: ` + logcont.log);
 
         } else {
 
