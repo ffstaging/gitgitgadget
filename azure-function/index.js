@@ -216,7 +216,8 @@ module.exports = async (req, res) => {
 
             await triggerAzurePipeline(triggerToken, 'githubsync', 'FFmpeg', pipelineId, sourceBranch, parameters, logcont);
 
-            res.end(`OK. Log: ` + logcont.log);
+            ////res.end(`OK. Log: ` + logcont.log);
+            res.end(`OK.`);
 
         } else {
 
