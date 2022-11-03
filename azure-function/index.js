@@ -50,7 +50,7 @@ const validateGitHubWebHook = (req) => {
 //    }
 }
 
-const triggerAzurePipeline = async (token, organization, project, buildDefinitionId, sourceBranch, parameters) => {
+const triggerAzurePipeline = async (token, organization, project, buildDefinitionId, sourceBranch, parameters, log) => {
     const auth = Buffer.from('PAT:' + token).toString('base64');
     const headers = {
         'Accept': 'application/json; api-version=5.0; excludeUrls=true',
@@ -72,6 +72,8 @@ const triggerAzurePipeline = async (token, organization, project, buildDefinitio
         headers: headers
     };
 
+    log += requestOptions.path + '\n';
+
     return new Promise((resolve, reject) => {
         const handleResponse = (res, err) => {
             res.setEncoding('utf8');
@@ -80,11 +82,13 @@ const triggerAzurePipeline = async (token, organization, project, buildDefinitio
                 response += chunk;
             });
             res.on('end', () => {
+                log += 'triggerAzurePipeline response: ' + response + '\n';
                 console.log('triggerAzurePipeline response: ' + response);
                 resolve(JSON.parse(response));
             });
             res.on('triggerAzurePipeline error: ' + err,
                 (err) => {
+                    log += 'triggerAzurePipeline error: ' + err + '\n';
                     console.log(err);
                     reject(err);
                 });
@@ -208,10 +212,11 @@ module.exports = async (req, res) => {
             if (!pipelineId || pipelineId < 1)
                 throw new Error(`No pipeline set up for org ${repositoryOwner}`);
             console.log(`Queuing with branch ${sourceBranch} and parameters ${JSON.stringify(parameters)}`);
+            let log = '';
 
-            await triggerAzurePipeline(triggerToken, 'githubsync', 'FFmpeg', pipelineId, sourceBranch, parameters);
+            await triggerAzurePipeline(triggerToken, 'githubsync', 'FFmpeg', pipelineId, sourceBranch, parameters, log);
 
-            res.end(`OK`);
+            res.end(`OK. Log: ` + log);
 
         } else {
 
