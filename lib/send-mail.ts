@@ -1,7 +1,6 @@
 import { createTransport, SendMailOptions } from "nodemailer";
 import SMTPTransport = require("nodemailer/lib/smtp-transport");
 import { decode } from "rfc2047";
-import {setTimeout} from 'timers/promises'
 
 export interface IParsedMBox {
     body: string;
@@ -182,7 +181,7 @@ export async function sendMail(mail: IParsedMBox,
         Object.assign(transportOpts, JSON.parse(smtpOpts));
     }
 
-    await setTimeout(1000); // Sleep for 1 second
+    await new Promise(res => setTimeout(res, 1000)); // Sleep for 1 second
 
     return new Promise<string>((resolve, reject) => {
         const transporter = createTransport(transportOpts);
