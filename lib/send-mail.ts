@@ -181,7 +181,7 @@ export async function sendMail(mail: IParsedMBox,
         Object.assign(transportOpts, JSON.parse(smtpOpts));
     }
 
-    await new Promise(res => setTimeout(res, 5000)); // Sleep 5 seconds
+    await new Promise(res => setTimeout(res, 5000)); // Sleep for 5 seconds
 
     return new Promise<string>((resolve, reject) => {
         const transporter = createTransport(transportOpts);
