@@ -237,10 +237,10 @@ export class MailArchiveGitHelper {
                         .addPRComment(pullRequestURL, comment);
                 }
 
-                console.log(`addPRCc`);
+                ////console.log(`addPRCc`);
 
-                await this.githubGlue.addPRCc(pullRequestURL,
-                                              parsedMbox.from || "");
+                ////await this.githubGlue.addPRCc(pullRequestURL,
+                ////                              parsedMbox.from || "");
 
                 console.log(`gggNotes.set`);
                 await this.gggNotes.set(parsed.messageID, {
