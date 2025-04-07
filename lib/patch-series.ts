@@ -490,7 +490,15 @@ export class PatchSeries {
 
             logger?.log(`\nheader:\n${header}\n**************`);
 
-            mails[i] = header + "\n\nFrom: " + authorMatch[2] + match[2];
+            let body = match[2];
+            if (thisAuthor) {
+                let senderSignoff = `\nSigned-off-by: ${thisAuthor}\n`;
+                let authorSignoff = `\nSigned-off-by: ${authorMatch[2]}\n`;
+                let replaceText = (body.indexOf(authorSignoff) == -1) ? '\n' : authorSignoff;
+                body = body.replace(senderSignoff, replaceText);
+            }
+
+            mails[i] = header + "\n\nFrom: " + authorMatch[2] + body;
 
 
         });
@@ -938,6 +946,7 @@ export class PatchSeries {
         const args = [
             "format-patch", "--thread", "--stdout", "--signature=ffmpeg-codebot",
             "--add-header=Fcc: Sent",
+            "--signoff", "--zero-commit",
             "--base", mergeBase, this.project.to,
         ].concat(PatchSeries.generateSingletonHeaders());
         this.project.cc.map((email) => {
