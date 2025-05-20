@@ -943,11 +943,11 @@ export class PatchSeries {
         this.project.cc.map((email) => {
             args.push("--cc=" + PatchSeries.encodeSender(email));
         });
-        if (this.metadata.referencesMessageIds) {
-            this.metadata.referencesMessageIds.map((email) => {
-                args.push("--in-reply-to=" + email);
-            });
-        }
+        ////if (this.metadata.referencesMessageIds) {
+        ////    this.metadata.referencesMessageIds.map((email) => {
+        ////        args.push("--in-reply-to=" + email);
+        ////    });
+        ////}
         const subjectPrefix = this.subjectPrefix();
         if (subjectPrefix) {
             args.push("--subject-prefix=" + subjectPrefix);
