@@ -60,6 +60,8 @@ export class LintCommit {
     // - the first line should not exceed 76 characters
     // - the first line should be followed by an empty line
 
+    private static readonly lineLengthExceptionPrefixes = [ 'fixes:', 'found-by:' ] as const;
+
     private commitMessageLength(): void {
         const maxColumns = 100;
         if (this.lines[0].length > maxColumns) {
@@ -74,9 +76,13 @@ export class LintCommit {
 
         for (let i = 2; i < this.lines.length; i++) {
             if (this.lines[i].length > 80) {
-                this.block("Please wrap lines in the body of the commit " +
-                    "message between 60 and 72 characters.");
-                break;
+                const lineLower = this.lines[i].toLowerCase();
+
+                if (!LintCommit.lineLengthExceptionPrefixes.some(prefix => lineLower.startsWith(prefix))) {
+                    this.block("Please wrap lines in the body of the commit " +
+                        "message between 60 and 72 characters.");
+                    break;
+                }
             }
         }
     }
