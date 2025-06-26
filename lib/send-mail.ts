@@ -194,6 +194,10 @@ export async function sendMail(mail: IParsedMBox,
                 to: mail.to,
             },
             raw: mail.raw,
+            headers: [{
+                key: "X-Original-From",
+                value: mail.from ?? "",
+            }]
         };
 
         transporter.sendMail(mailOptions, (error, info: { messageId: string })
