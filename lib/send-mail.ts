@@ -186,6 +186,12 @@ export async function sendMail(mail: IParsedMBox,
     return new Promise<string>((resolve, reject) => {
         const transporter = createTransport(transportOpts);
 
+        const rawWithHeader = addHeader(
+            mail.raw,
+            "X-Original-From",
+            mail.from ?? ""
+        );
+
         // setup email data with unicode symbols
         const mailOptions: SendMailOptions = {
             envelope: {
@@ -193,11 +199,7 @@ export async function sendMail(mail: IParsedMBox,
                 from: mail.from,
                 to: mail.to,
             },
-            raw: mail.raw,
-            headers: [{
-                key: "X-Original-From",
-                value: mail.from ?? "",
-            }]
+            raw: rawWithHeader
         };
 
         transporter.sendMail(mailOptions, (error, info: { messageId: string })
@@ -209,4 +211,49 @@ export async function sendMail(mail: IParsedMBox,
             }
         });
     });
+}
+
+function addHeader(raw: string, name: string, value: string): string {
+    // Detect which newline style the source uses
+    const CRLF = /\r\n/.test(raw) ? "\r\n" : "\n";
+    const headerLine = `${name}: ${value}`;
+
+    // Split into individual lines *without* discarding line–breaks
+    const lines = raw.split(/\r?\n/);
+
+    // Locate the canonical “From:” header 
+    let insertPos = -1;
+
+    for (let i = 0; i < lines.length; i++) {
+        if (/^From:/i.test(lines[i])) {
+            // Skip any folded continuation lines (start with SP / HT)
+            insertPos = i + 1;
+            while (insertPos < lines.length && /^[ \t]/.test(lines[insertPos])) {
+                insertPos++;
+            }
+            break;
+        }
+        // Stop searching once we reach the blank line after headers
+        if (lines[i] === "") break;
+    }
+
+    // Determine a safe insertion point ---
+    if (insertPos === -1) {
+        // No From: header found – insert just before the header/body separator
+        insertPos = lines.findIndex(l => l === "");
+        if (insertPos === -1) {
+            // Message is malformed (no blank line) – append one
+            lines.push("");
+            insertPos = lines.length - 1;
+        }
+    }
+
+    // Insert (or replace if it already exists) 
+    // Remove any existing occurrences of the header we’re about to add
+    for (let i = lines.length - 1; i >= 0; i--) {
+        if (new RegExp(`^${name}:`, "i").test(lines[i])) lines.splice(i, 1);
+    }
+    lines.splice(insertPos, 0, headerLine);
+
+    return lines.join(CRLF);
 }
