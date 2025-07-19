@@ -474,11 +474,11 @@ export class PatchSeries {
             }
 
             header = authorMatch[1] + replaceSender + authorMatch[3];
-            if (mails.length > 1 && i === 0 && senderName) {
-                // skip Cc:ing and From:ing in the cover letter
-                mails[i] = header + match[2];
-                return;
-            }
+            ////if (mails.length > 1 && i === 0 && senderName) {
+            ////    // skip Cc:ing and From:ing in the cover letter
+            ////    mails[i] = header + match[2];
+            ////    return;
+            ////}
 
             const ccMatch =
                 header.match(/^([^]*\nCc: [^]*?)(|\n(?![ \t])[^]*)$/);
